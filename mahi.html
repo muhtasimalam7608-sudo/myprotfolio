@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Aman | Full-Stack Alchemist | Animated Portfolio</title>
+    <!-- Tailwind + Font Awesome + Google Fonts + GSAP for smooth animations -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 7rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #0a0a2a;
+        }
+
+        /* animated gradient backgrounds - dynamic flow */
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes floatSlow {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-18px) rotate(1deg);
+            }
+        }
+
+        @keyframes gentlePulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes borderGlow {
+            0% {
+                border-color: rgba(236, 72, 153, 0.3);
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.3);
+            }
+
+            100% {
+                border-color: rgba(236, 72, 153, 0.8);
+                box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.4);
+            }
+        }
+
+        .animate-float-slow {
+            animation: floatSlow 6s ease-in-out infinite;
+        }
+
+        .animate-pulse-gentle {
+            animation: gentlePulse 4s ease-in-out infinite;
+        }
+
+        .animate-border-pulse {
+            animation: borderGlow 1.5s infinite alternate;
+        }
+
+        /* glassmorphism refined */
+        .glass-premium {
+            background: rgba(15, 25, 45, 0.55);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .glass-card-hover {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.5s cubic-bezier(0.2, 0.85, 0.4, 1);
+        }
+
+        .glass-card-hover:hover {
+            transform: translateY(-12px) scale(1.02);
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 30px 40px -15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* gradient text helper */
+        .gradient-text {
+            background: linear-gradient(135deg, #F9A8D4, #A78BFA, #60A5FA);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        /* custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ec4899;
+            border-radius: 10px;
+        }
+
+        /* home profile image style */
+        .profile-pic-container {
+            background: linear-gradient(145deg, #ec4899, #8b5cf6);
+            padding: 4px;
+            border-radius: 50%;
+            animation: borderGlow 3s infinite alternate;
+        }
+
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        .btn-shine:hover::after {
+            left: 120%;
+        }
+    </style>
+</head>
+
+<body class="text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ======================== TOP TIME BAR WITH LIVE UPDATE ===================
+        const TopTimeBar = () => {
+            const [dateTime, setDateTime] = useState(new Date());
+            useEffect(() => {
+                const timer = setInterval(() => setDateTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+            const formattedDate = dateTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const formattedTime = dateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return (
+                <div className="fixed top-0 left-0 w-full bg-black/60 backdrop-blur-xl z-[100] py-3 px-5 border-b border-white/20 shadow-2xl">
+                    <div className="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-2">
+                        <div className="flex items-center gap-3">
+                            <i className="fas fa-bolt text-pink-400 text-xl animate-pulse"></i>
+                            <span className="font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-indigo-300">Muhtasim's Alam</span>
+                        </div>
+                        <div className="flex items-center gap-5 text-sm md:text-base font-mono font-semibold">
+                            <div className="flex items-center gap-2"><i className="far fa-calendar-alt text-indigo-300"></i><span>{formattedDate}</span></div>
+                            <div className="flex items-center gap-2"><i className="far fa-clock text-pink-300"></i><span className="tracking-wider">{formattedTime}</span></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ======================== MODERN NAVBAR WITH INDICATOR ===================
+        const Navbar = () => {
+            const [active, setActive] = useState('home');
+            const navItems = [
+                { id: 'home', label: 'Home', icon: 'fas fa-rocket' },
+                { id: 'about', label: 'About', icon: 'fas fa-user-astronaut' },
+                { id: 'journey', label: 'Journey', icon: 'fas fa-timeline' },
+                { id: 'skill', label: 'Skills', icon: 'fas fa-microchip' },
+                { id: 'services', label: 'Services', icon: 'fas fa-crown' },
+                { id: 'contact', label: 'Contact', icon: 'fas fa-comment-dots' }
+            ];
+            useEffect(() => {
+                const handleScroll = () => {
+                    const sections = navItems.map(item => document.getElementById(item.id));
+                    const scrollPos = window.scrollY + 180;
+                    for (let i = sections.length - 1; i >= 0; i--) {
+                        if (sections[i] && sections[i].offsetTop <= scrollPos) {
+                            setActive(navItems[i].id);
+                            break;
+                        }
+                    }
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+            return (
+                <nav className="fixed top-[62px] left-0 w-full bg-black/40 backdrop-blur-xl py-4 px-6 z-50 shadow-2xl border-b border-white/10">
+                    <div className="max-w-6xl mx-auto flex justify-between items-center">
+                        <a href="#home" className="text-3xl font-black tracking-tighter"><span className="gradient-text">Mahin</span><span className="text-white">.</span></a>
+                        <ul className="hidden md:flex gap-7 text-sm font-semibold">
+                            {navItems.map(item => (
+                                <li key={item.id}>
+                                    <a href={`#${item.id}`} className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 hover:bg-white/20 hover:scale-105 ${active === item.id ? 'bg-gradient-to-r from-pink-500/30 to-indigo-500/30 text-pink-200 shadow-md' : 'text-gray-200'}`}>
+                                        <i className={item.icon}></i><span>{item.label}</span>
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                        <a href="#contact" className="hidden md:block bg-gradient-to-r from-pink-500 to-indigo-600 px-6 py-2.5 rounded-full text-sm font-bold hover:shadow-xl hover:scale-105 transition-all duration-300 btn-shine relative z-10">✨ Let's Connect</a>
+                    </div>
+                </nav>
+            );
+        };
+
+        // ======================== SECTION WRAPPER WITH GSAP REVEAL =================
+        const SectionWrapper = ({ id, children, className = "" }) => {
+            const sectionRef = useRef(null);
+            useEffect(() => {
+                if (sectionRef.current) {
+                    gsap.fromTo(sectionRef.current.children,
+                        { opacity: 0, y: 60 },
+                        { opacity: 1, y: 0, duration: 1, scrollTrigger: { trigger: sectionRef.current, start: "top 80%", toggleActions: "play none none reverse" } }
+                    );
+                }
+            }, []);
+            return (
+                <section id={id} ref={sectionRef} className={`${className} min-h-screen flex items-center justify-center relative px-5 py-24 overflow-hidden`}>
+                    <div className="max-w-7xl mx-auto w-full z-10">
+                        {children}
+                    </div>
+                </section>
+            );
+        };
+
+        // ======================== HOME SECTION (ENHANCED + IMAGE + BADGES) =================
+        const HomeSection = () => {
+            const [imgError, setImgError] = useState(false);
+            useEffect(() => {
+                gsap.from(".home-hero-text", { opacity: 0, x: -80, duration: 1.2, ease: "back.out(1.2)" });
+                gsap.from(".home-image-wrapper", { opacity: 0, scale: 0.8, duration: 1, delay: 0.3 });
+            }, []);
+            return (
+                <SectionWrapper id="home" className="bg-home" style={{ background: "linear-gradient(125deg, #0b0b2b, #1e1a4b, #2e1a47)", backgroundSize: "300% 300%", animation: "gradientFlow 14s ease infinite" }}>
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-14">
+                        <div className="flex-1 text-center lg:text-left space-y-6 home-hero-text">
+                            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-5 py-2 rounded-full text-sm border border-white/20">
+                                <i className="fas fa-crown text-yellow-400"></i> <span>Font-End-Developer</span>
+                            </div>
+                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-tight">
+                                Muhtasim <span className="gradient-text">Alam Mahin</span>
+                            </h1>
+                            <p className="text-xl text-gray-200 max-w-2xl leading-relaxed">Crafting high-performance web ecosystems with React, NestJS & AI integrations. 5+ years of digital excellence.</p>
+                            <div className="flex gap-5 justify-center lg:justify-start flex-wrap">
+                                <a href="#contact" className="bg-gradient-to-r from-pink-500 to-indigo-600 px-8 py-4 rounded-full font-bold text-lg shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 flex items-center gap-2 btn-shine"><i className="fas fa-paper-plane"></i> Start a Project</a>
+                                <a href="#journey" className="border-2 border-white/40 hover:bg-white/20 px-8 py-4 rounded-full font-semibold transition-all backdrop-blur-sm flex items-center gap-2"><i className="fas fa-play-circle"></i> My Odyssey</a>
+                            </div>
+                            <div className="flex gap-6 text-3xl justify-center lg:justify-start pt-4">
+                                <a href="#" className="hover:text-pink-400 transition-all duration-300 hover:-translate-y-1"><i className="fab fa-github"></i></a>
+                                <a href="#" className="hover:text-pink-400 transition-all duration-300 hover:-translate-y-1"><i className="fab fa-linkedin"></i></a>
+                                <a href="#" className="hover:text-pink-400 transition-all duration-300 hover:-translate-y-1"><i className="fab fa-x-twitter"></i></a>
+                            </div>
+                        </div>
+
+                        {/* Enhanced Image Area with floating badges */}
+                        <div className="flex-1 flex justify-center relative home-image-wrapper">
+                            <div className="relative group">
+                                <div className="absolute -inset-6 bg-gradient-to-r from-pink-600 to-indigo-600 rounded-full blur-2xl opacity-40 group-hover:opacity-80 transition duration-700 animate-pulse-gentle"></div>
+                                <div className="relative w-80 h-80 md:w-[380px] md:h-[380px] profile-pic-container rounded-full overflow-hidden shadow-2xl animate-float-slow">
+                                    {!imgError ? (
+                                        <img src="mahin.png" alt="Muhtasim Alam Mahin" className="w-full h-full object-cover rounded-full" onError={() => setImgError(true)} />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-indigo-800 to-pink-800 flex flex-col items-center justify-center text-white"><i className="fas fa-user-circle text-7xl mb-2"></i><p className="font-bold">Mahin</p></div>
+                                    )}
+                                </div>
+                                {/* Online pulse ring */}
+                                <div className="absolute bottom-5 right-5 bg-emerald-500 w-7 h-7 rounded-full border-4 border-black shadow-lg animate-pulse"></div>
+                                {/* Animated Project Badge */}
+                                <div className="absolute -top-6 -right-6 md:-top-10 md:-right-10 bg-white/20 backdrop-blur-xl rounded-2xl p-3 shadow-2xl border border-white/30 animate-bounce-slow">
+                                    <div className="flex items-center gap-2">
+                                        <div className="bg-gradient-to-br from-amber-400 to-pink-500 p-2 rounded-xl"><i className="fas fa-trophy text-white"></i></div>
+                                        <div><p className="text-2xl font-black">35+</p><p className="text-[10px] uppercase tracking-wider">Projects Shipped</p></div>
+                                    </div>
+                                </div>
+                                {/* Expertise floating tag */}
+                                <div className="absolute -bottom-4 -left-6 bg-black/50 backdrop-blur-md rounded-full px-5 py-2 border border-pink-400/60 shadow-xl">
+                                    <i className="fas fa-code text-pink-400 mr-2"></i><span className="font-mono text-sm">React • NestJS Expert</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </SectionWrapper>
+            );
+        };
+
+        // ======================== ABOUT SECTION ENHANCED =================
+        const AboutSection = () => (
+            <SectionWrapper id="about" className="bg-about" style={{ background: "linear-gradient(125deg, #110B2B, #2A1B38, #4A2545)", backgroundSize: "300% 300%", animation: "gradientFlow 15s ease infinite" }}>
+                <div className="text-center mb-14">
+                    <h2 className="text-5xl font-extrabold inline-block border-b-4 border-pink-400 pb-3">About The Alchemist</h2>
+                    <p className="text-gray-300 mt-4 max-w-2xl mx-auto">Coding beyond boundaries, turning ideas into digital reality</p>
+                </div>
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="glass-premium p-8 rounded-3xl space-y-5">
+                        <p className="leading-relaxed text-lg"><i className="fas fa-quote-left text-pink-400 mr-2"></i> Full-stack developer with obsession for clean code & micro-interactions. I have collaborated with Fortune 500 companies and agile startups, delivering solutions that scale.</p>
+                        <p className="leading-relaxed">Currently exploring AI-driven interfaces and serverless architectures. Certified NestJS architect and React performance specialist.</p>
+                        <div className="grid grid-cols-2 gap-5 pt-4">
+                            <div className="flex items-center gap-2"><i className="fas fa-map-pin text-pink-400"></i> Bangalore / Remote</div>
+                            <div className="flex items-center gap-2"><i className="fas fa-laptop-code text-pink-400"></i> 50+ successful deliveries</div>
+                            <div className="flex items-center gap-2"><i className="fas fa-medal text-pink-400"></i> Google Dev Expert (GDG)</div>
+                            <div className="flex items-center gap-2"><i className="fas fa-heart text-pink-400"></i> Open Source Advocate</div>
+                        </div>
+                    </div>
+                    <div className="glass-card-hover p-8 rounded-3xl text-center relative overflow-hidden">
+                        <i className="fas fa-brain text-6xl text-pink-400 mb-4"></i>
+                        <p className="text-2xl italic font-light">"Great design is invisible, great code is timeless"</p>
+                        <div className="flex justify-center gap-3 mt-7 flex-wrap"><span className="bg-white/20 px-4 py-2 rounded-full text-sm">Next.js 14</span><span className="bg-white/20 px-4 py-2 rounded-full text-sm">TypeScript</span><span className="bg-white/20 px-4 py-2 rounded-full text-sm">Tailwind Magic</span></div>
+                    </div>
+                </div>
+            </SectionWrapper>
+        );
+
+        // ======================== JOURNEY TIMELINE (ELEVATED) =================
+        const JourneySection = () => {
+            const milestones = [
+                { year: "2020", title: "The Spark", desc: "Built first interactive web app and fell in love with JS.", icon: "fas fa-fire", color: "orange" },
+                { year: "2021", title: "React Revolution", desc: "Mastered hooks, state management & modern frontend.", icon: "fab fa-react", color: "#61dafb" },
+                { year: "2022", title: "Backend Mastery", desc: "NestJS, GraphQL, PostgreSQL – fullstack prowess.", icon: "fas fa-database", color: "#e535ab" },
+                { year: "2023", title: "Tech Lead", desc: "Led teams, delivered 20+ production apps, mentored juniors.", icon: "fas fa-users", color: "#a78bfa" },
+                { year: "2024", title: "Cloud & AI", desc: "AWS Certified, integrated LLMs into real-world apps.", icon: "fas fa-cloud-arrow-up", color: "#38bdf8" },
+                { year: "2025+", title: "Global Creator", desc: "Building scalable ecosystems & tech content creator.", icon: "fas fa-globe", color: "#f472b6" }
+            ];
+            return (
+                <SectionWrapper id="journey" className="bg-journey" style={{ background: "linear-gradient(135deg, #07111f, #172a3a, #1f3a3f)", backgroundSize: "300% 300%", animation: "gradientFlow 18s ease infinite" }}>
+                    <div className="text-center mb-14"><h2 className="text-5xl font-extrabold border-b-4 border-pink-400 inline-block pb-2">The Timeline</h2><p className="text-gray-300 mt-3">Each step shapes the legacy</p></div>
+                    <div className="relative max-w-5xl mx-auto">
+                        <div className="hidden lg:block absolute left-1/2 w-1 h-full bg-gradient-to-b from-pink-400 via-indigo-400 to-purple-400 transform -translate-x-1/2"></div>
+                        <div className="space-y-10">
+                            {milestones.map((m, idx) => (
+                                <div key={idx} className={`relative flex flex-col lg:flex-row ${idx % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 group`}>
+                                    <div className="lg:w-1/2 flex justify-center lg:justify-end">
+                                        <div className="glass-card-hover p-6 rounded-2xl w-full max-w-md transition-all duration-500 hover:scale-105">
+                                            <div className="flex items-center gap-3 mb-2"><i className={`${m.icon} text-3xl`} style={{ color: m.color }}></i><span className="text-pink-300 font-bold text-xl">{m.year}</span></div>
+                                            <h3 className="text-2xl font-bold">{m.title}</h3>
+                                            <p className="text-gray-200 text-md mt-2">{m.desc}</p>
+                                        </div>
+                                    </div>
+                                    <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 w-5 h-5 rounded-full bg-pink-500 border-4 border-white shadow-xl animate-pulse"></div>
+                                    <div className="lg:w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </SectionWrapper>
+            );
+        };
+
+        // ======================== SKILL SECTION WITH PROGRESS CIRCLE EFFECT =================
+        const SkillSection = () => {
+            const skills = [
+                { name: "React & Next.js", percent: 84, icon: "fab fa-react", color: "#60a5fa" },
+                { name: "TypeScript", percent: 71, icon: "fas fa-code", color: "#3178c6" },
+                { name: "Tailwind / CSS3", percent: 97, icon: "fab fa-css3-alt", color: "#14b8a6" },
+                { name: "HTML / CSS", percent: 99, icon: "fas fa-crown", color: "#ec4899" },
+                { name: "MongoDB", percent: 57, icon: "fas fa-database", color: "#f59e0b" },
+                { name: "GraphQL / REST", percent: 32, icon: "fas fa-chart-line", color: "#a855f7" }
+            ];
+            return (
+                <SectionWrapper id="skill" className="bg-skill" style={{ background: "linear-gradient(145deg, #180b2a, #2b1e3a, #3e2a4a)", backgroundSize: "300% 300%", animation: "gradientFlow 13s ease infinite" }}>
+                    <div className="text-center mb-12"><h2 className="text-5xl font-extrabold border-b-4 border-pink-400 inline-block pb-2">Core Arsenal</h2><p className="text-gray-300 mt-3">Mastery in modern stack</p></div>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {skills.map((skill, i) => (
+                            <div key={i} className="glass-premium p-6 rounded-2xl hover:shadow-2xl transition-all">
+                                <div className="flex items-center gap-4 mb-3"><i className={`${skill.icon} text-3xl`} style={{ color: skill.color }}></i><span className="text-xl font-bold">{skill.name}</span><span className="ml-auto text-2xl font-black text-pink-300">{skill.percent}%</span></div>
+                                <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden"><div className="h-full rounded-full transition-all duration-1000" style={{ width: `${skill.percent}%`, backgroundColor: skill.color, boxShadow: `0 0 8px ${skill.color}` }}></div></div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-4 mt-12"><span className="glass-premium px-5 py-2 rounded-full text-sm"><i className="fab fa-docker mr-1"></i> Docker</span><span className="glass-premium px-5 py-2 rounded-full text-sm"><i className="fas fa-cloud mr-1"></i> AWS/Azure</span><span className="glass-premium px-5 py-2 rounded-full text-sm"><i className="fab fa-git-alt mr-1"></i> CI/CD</span></div>
+                </SectionWrapper>
+            );
+        };
+
+        // ======================== SERVICES SECTION WITH 3D HOVER =================
+        const ServicesSection = () => {
+            const services = [
+                { title: "Full-Stack Development", desc: "Scalable apps with Next.js, NestJS, realtime features.", icon: "fas fa-layer-group", color: "from-indigo-500 to-purple-500" },
+                { title: "API & Microservices", desc: "High-performance GraphQL & REST APIs, event-driven.", icon: "fas fa-plug", color: "from-pink-500 to-rose-500" },
+                { title: "UI/UX Engineering", desc: "Framer Motion, Tailwind, responsive design systems.", icon: "fas fa-paintbrush", color: "from-cyan-500 to-blue-500" },
+                { title: "Tech Mentorship", desc: "Code audits, architecture reviews, team upskilling.", icon: "fas fa-chalkboard-user", color: "from-emerald-500 to-teal-500" }
+            ];
+            return (
+                <SectionWrapper id="services" className="bg-services" style={{ background: "linear-gradient(125deg, #02111f, #05223b, #0a2f44)", backgroundSize: "300% 300%", animation: "gradientFlow 16s ease infinite" }}>
+                    <div className="text-center mb-12"><h2 className="text-5xl font-extrabold border-b-4 border-pink-400 inline-block pb-2">Premium Services</h2><p className="text-gray-300 mt-3">Innovation meets execution</p></div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {services.map((s, idx) => (
+                            <div key={idx} className="glass-card-hover p-6 rounded-2xl text-center group transform transition duration-500 hover:-translate-y-3">
+                                <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${s.color} flex items-center justify-center text-3xl shadow-xl mb-5 group-hover:scale-110 transition`}><i className={s.icon}></i></div>
+                                <h3 className="text-2xl font-bold mb-3">{s.title}</h3>
+                                <p className="text-gray-200 text-sm">{s.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </SectionWrapper>
+            );
+        };
+
+        // ======================== CONTACT SECTION WITH GLOW INPUT =================
+        const ContactSection = () => {
+            const [form, setForm] = useState({ name: '', email: '', message: '' });
+            const [sent, setSent] = useState(false);
+            const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (form.name && form.email && form.message) {
+                    setSent(true);
+                    setTimeout(() => setSent(false), 4000);
+                    setForm({ name: '', email: '', message: '' });
+                } else alert('Please fill all fields');
+            };
+            return (
+                <SectionWrapper id="contact" className="bg-contact" style={{ background: "linear-gradient(125deg, #1a1b2f, #2b2d4b, #3b2e5e)", backgroundSize: "300% 300%", animation: "gradientFlow 14s ease infinite" }}>
+                    <div className="text-center mb-12"><h2 className="text-5xl font-extrabold border-b-4 border-pink-400 inline-block pb-2">Let's Create Magic</h2><p className="text-gray-300 mt-3">Got a vision? Let's bring it to life</p></div>
+                    <div className="grid lg:grid-cols-2 gap-12">
+                        <div className="glass-premium p-8 rounded-3xl space-y-6">
+                            <div className="flex items-center gap-5 text-lg"><i className="fas fa-map-marker-alt text-pink-400 text-2xl"></i><span>DHAKA / NARAYANGONJ (Worldwide)</span></div>
+                            <div className="flex items-center gap-5 text-lg"><i className="fas fa-envelope-open-text text-pink-400 text-2xl"></i><span>muhtasimalam213@gmail.com</span></div>
+                            <div className="flex items-center gap-5 text-lg"><i className="fab fa-discord text-pink-400 text-2xl"></i><span>Aman.sharma#dev</span></div>
+                            <div className="bg-white/10 p-5 rounded-2xl border-l-4 border-pink-400"><i className="fas fa-hourglass-half mr-2"></i> Average response: 2 hours | 24/7 commitment</div>
+                        </div>
+                        <form onSubmit={handleSubmit} className="glass-premium p-8 rounded-3xl space-y-5">
+                            <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Your full name" className="w-full px-5 py-4 rounded-xl bg-white/5 border border-white/20 focus:border-pink-400 focus:outline-none transition-all focus:shadow-[0_0_12px_#ec4899]" required />
+                            <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email address" className="w-full px-5 py-4 rounded-xl bg-white/5 border border-white/20 focus:border-pink-400 focus:outline-none transition-all" required />
+                            <textarea rows="5" name="message" value={form.message} onChange={handleChange} placeholder="Tell me about your epic project..." className="w-full px-5 py-4 rounded-xl bg-white/5 border border-white/20 focus:border-pink-400 focus:outline-none transition-all" required></textarea>
+                            <button type="submit" className="w-full bg-gradient-to-r from-pink-500 to-indigo-600 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-xl"><i className="fas fa-paper-plane"></i> Send Message</button>
+                            {sent && <div className="text-center text-green-300 bg-green-900/50 py-3 rounded-lg backdrop-blur-sm animate-pulse">✨ Message delivered! I'll reach out shortly.</div>}
+                        </form>
+                    </div>
+                </SectionWrapper>
+            );
+        };
+
+        // ======================== FOOTER =================
+        const Footer = () => (
+            <footer className="bg-black/70 backdrop-blur-xl py-8 text-center border-t border-white/10">
+                <p className="text-gray-300 text-sm tracking-wide">© 2026 Muhtasim Alam Mahin — Built with React, Tailwind & Cosmic Animations. All systems go.</p>
+                <div className="flex justify-center gap-6 mt-4 text-2xl"><a href="#" className="hover:text-pink-400 transition-all hover:scale-110"><i className="fab fa-github"></i></a><a href="#" className="hover:text-pink-400 transition-all hover:scale-110"><i className="fab fa-linkedin"></i></a><a href="#" className="hover:text-pink-400 transition-all hover:scale-110"><i className="fab fa-twitter"></i></a></div>
+            </footer>
+        );
+
+        // ======================== MAIN APP =================
+        const App = () => {
+            useEffect(() => {
+                if (typeof gsap !== 'undefined' && ScrollTrigger) {
+                    gsap.registerPlugin(ScrollTrigger);
+                    ScrollTrigger.refresh();
+                }
+            }, []);
+            return (
+                <>
+                    <TopTimeBar />
+                    <Navbar />
+                    <main className="pt-[108px]">
+                        <HomeSection />
+                        <AboutSection />
+                        <JourneySection />
+                        <SkillSection />
+                        <ServicesSection />
+                        <ContactSection />
+                    </main>
+                    <Footer />
+                </>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+</body>
+
+</html>
